@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ultimate Valentine 💜</title>
+    <link href="https://fonts.googleapis.com" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            display: flex; flex-direction: column; justify-content: center; align-items: center; 
+            height: 100vh; width: 100vw;
+            background: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%);
+            overflow: hidden; font-family: 'Montserrat', sans-serif;
+            transition: filter 1s;
+        }
+
+        body.sleeping { filter: brightness(0.5); }
+
+        #heyText {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0);
+            font-size: 80px; color: #fff; font-family: 'Caveat', cursive;
+            z-index: 500; pointer-events: none; transition: 0.4s;
+            text-shadow: 0 10px 30px rgba(0,0,0,0.5); opacity: 0;
+        }
+        #heyText.show { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+
+        .cursor-particle {
+            position: fixed; pointer-events: none; z-index: 1000;
+            font-size: 14px; opacity: 0.8; filter: blur(0.5px);
+            animation: fadeAndRise 1s ease-out forwards;
+        }
+        @keyframes fadeAndRise {
+            0% { transform: translate(-50%, -50%) scale(1); opacity: 0.8; }
+            100% { transform: translate(-50%, -80px) scale(0.3); opacity: 0; }
+        }
+
+        #welcomeText { position: absolute; top: 10%; text-align: center; z-index: 10; transition: 0.5s; }
+        #welcomeText h1 { font-family: 'Caveat', cursive; font-size: 56px; color: #fff; }
+        
+        #timerDisplay { 
+            position: absolute; top: 10%; font-size: 24px; color: #fff; 
+            font-weight: 600; display: none; z-index: 10; background: rgba(0,0,0,0.2);
+            padding: 10px 25px; border-radius: 50px; backdrop-filter: blur(5px);
+        }
+
+        .mail-wrapper {
+            position: relative; width: 240px; height: 160px; background: #fff;
+            border-radius: 15px; box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+            display: flex; justify-content: center; align-items: center; 
+            cursor: pointer; z-index: 5; transition: transform 0.1s;
+        }
+        .mail-wrapper.hide { transform: scale(0) !important; opacity: 0; pointer-events: none; }
+
+        .letter {
+            position: relative; width: 480px; height: 420px;
+            background: #fff; border-radius: 30px; box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+            display: none; flex-direction: column; align-items: center; 
+            padding: 30px; z-index: 15; text-align: center;
+        }
+        .letter.show { display: flex; animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .letter.shake { animation: shakeLetter 0.2s infinite; }
+
+        @keyframes shakeLetter {
+            0%, 100% { transform: translate(0, 0); }
+            25% { transform: translate(3px, 3px); }
+            50% { transform: translate(-3px, -3px); }
+            75% { transform: translate(3px, -3px); }
+        }
+
+        .letter h2 { font-family: 'Caveat', cursive; color: #8e44ad; font-size: 38px; min-height: 90px; }
+        .letter p.sub-text { font-size: 16px; color: #666; margin-top: -10px; display: none; margin-bottom: 20px; }
+
+        .btn-area { position: relative; width: 100%; height: 160px; border: 2px dashed #fbc2eb; border-radius: 25px; }
+
+        button { padding: 12px 30px; border: none; border-radius: 50px; cursor: pointer; font-weight: 600; font-size: 16px; transition: 0.2s; }
+        #yesBtn { background: #8e44ad; color: white; position: absolute; left: 30%; top: 50%; transform: translate(-50%, -50%); z-index: 20; }
+        #noBtn { background: #fbc2eb; color: #8e44ad; position: absolute; left: 70%; top: 50%; transform: translate(-50%, -50%); transition: 0.12s; z-index: 21; }
+
+        /* Кнопка альбома */
+        #albumBtn { background: #ff4d6d; color: white; display: none; margin-top: 10px; animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+
+        /* Фотоальбом (слайдер) */
+        #photoAlbum {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0.95); display: none; flex-direction: column;
+            justify-content: center; align-items: center; z-index: 600;
+        }
+        #albumImg { max-width: 80%; max-height: 70%; border-radius: 15px; border: 5px solid #fff; object-fit: cover; }
+        .album-controls { margin-top: 30px; display: flex; gap: 20px; }
+        .close-album { position: absolute; top: 30px; right: 30px; color: white; font-size: 40px; cursor: pointer; }
+
+        #cameraOverlay {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            border: 40px solid rgba(0,0,0,0.8); display: none; z-index: 200; pointer-events: none;
+        }
+        #cameraOverlay::after {
+            content: "● TARGET LOCKED / REC"; position: absolute; top: 50px; left: 50px; color: #ff0000; font-weight: bold; animation: blink 1s infinite;
+        }
+        @keyframes blink { 50% { opacity: 0; } }
+
+        #screamer {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: #fff; display: none; justify-content: center; align-items: center;
+            flex-direction: column; z-index: 300; text-align: center;
+        }
+        #screamer span { font-size: 220px; animation: shakeScreamer 0.1s infinite; }
+        @keyframes shakeScreamer { 0% { transform: rotate(0deg); } 50% { transform: rotate(5deg); } 100% { transform: rotate(-5deg); } }
+
+        .emoji-rain { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 50; }
+        .emoji-rain span { position: absolute; bottom: 100%; animation: fall 3s linear forwards; }
+        @keyframes fall { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(110vh); opacity: 0; } }
+    </style>
+</head>
+<body>
+
+    <div id="heyText">ЭЙ! ТЫ ТУТ?! 🧐</div>
+    <div id="welcomeText"><h1>Такого у тебя еще не было)</h1></div>
+    <div id="timerDisplay">Поторопись! ⏳ <span id="seconds">10</span> сек.</div>
+
+    <div class="mail-wrapper" id="mailWrapper" onclick="openLetter()">
+        <div style="font-size: 70px;">💌</div>
+    </div>
+
+    <div class="letter" id="letter">
+        <h2 id="question">Любишь меня? 💜</h2>
+        <p class="sub-text" id="subText"></p>
+        <div class="btn-area" id="btnArea">
+            <button id="yesBtn" onclick="celebrate()">Да!</button>
+            <button id="noBtn" onmouseover="moveButton()" onmouseleave="stopShake()">Нет</button>
+        </div>
+        <button id="albumBtn" onclick="openAlbum()">Наши моменты ✨</button>
+    </div>
+
+    <!-- Фотоальбом -->
+    <div id="photoAlbum">
+        <div class="close-album" onclick="closeAlbum()">×</div>
+        <img id="albumImg" src="" alt="Фото">
+        <div class="album-controls">
+            <button onclick="prevPhoto()" style="background: #fff; color: #000;">← Назад</button>
+            <button onclick="nextPhoto()" style="background: #fff; color: #000;">Вперед →</button>
+        </div>
+    </div>
+
+    <div id="cameraOverlay"></div>
+
+    <div id="screamer">
+        <span>🤨</span>
+        <h2 style="margin-top: 20px;">Мда... Слишком долго... <br> Пробуй еще</h2>
+        <button onclick="location.reload()" style="margin-top: 30px; background: #8e44ad; color: #fff;">ЕЩЁ РАЗ</button>
+    </div>
+
+    <div class="emoji-rain" id="emojiRain"></div>
+
+    <script>
+        const heartEmojis = ['💜', '💖', '✨', '🌸', '💟'];
+        const laughEmojis = ['🤣', '🤨', '🙄', '🤭'];
+        const sleepEmojis = ['😴', '💤', '🕯️'];
+        const noPhrases = ["Диля, серьезно? 🤨", "А ну-ка передумай! 😤", "Даже не думай, малышкина 🚫", "Мимо! 😉", "Малышка показывает характер! 🤡", "Дилечка, так не выйдет!"];
+        
+        // ЗАМЕНИТЕ ЭТИ ССЫЛКИ НА СВОИ
+        const photos = [
+            'https://github.com/ilnarbulatov/Valentine-/blob/main/IMG_0050.jpeg',
+            'https://picsum.photos',
+            'https://picsum.photos'
+        ];
+        let currentPhotoIdx = 0;
+
+        let timeLeft = 10;
+        let timerStarted = false;
+        let laughCycle = null;
+        let lastX = 0, lastY = 0;
+        let phraseIndex = 0;
+        let idleTimer;
+
+        document.addEventListener('mousemove', (e) => {
+            document.body.classList.remove('sleeping');
+            document.getElementById("heyText").classList.remove('show');
+            clearTimeout(idleTimer);
+            
+            idleTimer = setTimeout(() => {
+                if (timerStarted && timeLeft > 0) {
+                    document.body.classList.add('sleeping');
+                    document.getElementById("heyText").classList.add('show');
+                    createEmoji(sleepEmojis);
+                }
+            }, 3000); 
+
+            const wrapper = document.getElementById("mailWrapper");
+            if (!timerStarted) {
+                const rect = wrapper.getBoundingClientRect();
+                const centerX = rect.left + rect.width / 2;
+                const centerY = rect.top + rect.height / 2;
+                const rotateX = (e.clientY - centerY) / 20;
+                const rotateY = (e.clientX - centerX) / 20;
+                wrapper.style.transform = `perspective(1000px) rotateX(${-rotateX}deg) rotateY(${rotateY}deg)`;
+            }
+
+            const dist = Math.hypot(e.pageX - lastX, e.pageY - lastY);
+            if (dist > 20) {
+                const p = document.createElement('div');
+                p.className = 'cursor-particle';
+                p.innerHTML = ['✨', '•', '💜'][Math.floor(Math.random() * 3)];
+                p.style.left = e.clientX + 'px'; p.style.top = e.clientY + 'px';
+                document.body.appendChild(p);
+                lastX = e.pageX; lastY = e.pageY;
+                setTimeout(() => p.remove(), 1000);
+            }
+        });
+
+        function openLetter() {
+            document.getElementById("welcomeText").style.display = "none";
+            document.getElementById("mailWrapper").classList.add("hide");
+            document.getElementById("letter").classList.add("show");
+            document.getElementById("timerDisplay").style.display = "block";
+            startTimer();
+        }
+
+        function startTimer() {
+            if (timerStarted) return;
+            timerStarted = true;
+            const timerInterval = setInterval(() => {
+                if (timeLeft > 0) {
+                    timeLeft--;
+                    document.getElementById("seconds").innerText = timeLeft;
+                    if (timeLeft === 5) document.getElementById("letter").classList.add("shake");
+                } else if (timeLeft === 0) {
+                    clearInterval(timerInterval);
+                    triggerScreamer();
+                }
+            }, 1000);
+        }
+
+        function moveButton() {
+            const noBtn = document.getElementById("noBtn");
+            const area = document.getElementById("btnArea");
+            const q = document.getElementById("question");
+            q.innerHTML = noPhrases[phraseIndex];
+            phraseIndex = (phraseIndex + 1) % noPhrases.length;
+            const maxX = area.clientWidth - noBtn.clientWidth;
+            const maxY = area.clientHeight - noBtn.clientHeight;
+            noBtn.style.left = Math.random() * maxX + 'px';
+            noBtn.style.top = Math.random() * maxY + 'px';
+            if (!laughCycle) laughCycle = setInterval(() => createEmoji(laughEmojis), 200);
+        }
+
+        function stopShake() { 
+            if (timeLeft > 5 || timeLeft <= 0) document.getElementById("letter").classList.remove("shake"); 
+        }
+
+        function triggerScreamer() {
+            if (timeLeft === -999) return;
+            document.body.classList.remove('sleeping');
+            document.getElementById("heyText").classList.remove('show');
+            document.getElementById("screamer").style.display = "flex";
+            clearInterval(laughCycle);
+        }
+
+        function celebrate() {
+            const finishTime = timeLeft;
+            timeLeft = -999;
+            document.body.classList.remove('sleeping');
+            document.getElementById("heyText").classList.remove('show');
+            document.getElementById("letter").classList.remove("shake");
+            clearInterval(laughCycle);
+            
+            document.getElementById("timerDisplay").style.display = "none";
+            document.getElementById("cameraOverlay").style.display = "block";
+            document.getElementById("noBtn").style.display = "none";
+            document.getElementById("btnArea").style.display = "none";
+            
+            const q = document.getElementById("question");
+            const sub = document.getElementById("subText");
+            const yes = document.getElementById("yesBtn");
+            const albumBtn = document.getElementById("albumBtn");
+            
+            sub.style.display = "block";
+            yes.style.display = "none";
+            albumBtn.style.display = "inline-block";
+
+            if (finishTime >= 7) {
+                q.innerHTML = "ВАУ! ТАК БЫСТРО?";
+                sub.innerHTML = "Малышкина,твоя решительность сводит меня с ума! ✨";
+            } else if (finishTime >= 3) {
+                q.innerHTML = "она еще думает тут)";
+                sub.innerHTML = "Я знал, что ты не устоишь, я же все еще пиздатый";
+            } else {
+                q.innerHTML = "ФУХ, УСПЕЛА! ";
+                sub.innerHTML = "Еще секунда.. да уж..! Но всё равно ты пиздатая";
+            }
+
+            for(let i=0; i<60; i++) setTimeout(() => createEmoji(heartEmojis), i * 10);
+            setInterval(() => createEmoji(heartEmojis), 100);
+        }
+
+        // Логика альбома
+        function openAlbum() {
+            document.getElementById("photoAlbum").style.display = "flex";
+            updateAlbumPhoto();
+        }
+        function closeAlbum() {
+            document.getElementById("photoAlbum").style.display = "none";
+        }
+        function updateAlbumPhoto() {
+            document.getElementById("albumImg").src = photos[currentPhotoIdx];
+        }
+        function nextPhoto() {
+            currentPhotoIdx = (currentPhotoIdx + 1) % photos.length;
+            updateAlbumPhoto();
+        }
+        function prevPhoto() {
+            currentPhotoIdx = (currentPhotoIdx - 1 + photos.length) % photos.length;
+            updateAlbumPhoto();
+        }
+
+        function createEmoji(list) {
+            const container = document.getElementById("emojiRain");
+            const span = document.createElement("span");
+            span.innerHTML = list[Math.floor(Math.random() * list.length)];
+            span.style.left = Math.random() * 100 + "vw";
+            span.style.fontSize = "30px";
+            container.appendChild(span);
+            setTimeout(() => span.remove(), 3000);
+        }
+    </script>
+</body>
+</html>
